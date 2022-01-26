@@ -1,0 +1,8 @@
+<h1>Hello, {{.Name}}!</h1>
+<h1>Rol: {{.Rol}}</h1>
+<h1>Salary: {{.Salary}}</h1>
+<ul>
+{{- range $v := .MiMapa}}
+  <li>{{- $v}}</li>
+{{- end}}
+</ul>
