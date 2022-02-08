@@ -1,31 +1,28 @@
 package main
 
 import (
-	"html/template"
-	"os"
+	_ "github.com/lib/pq"
 )
 
-func main() {
-	t, err := template.ParseFiles("hello.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	// var m map[int]string
-	mapa := map[int]string {
-		90: "Dog",
-		91: "Cat",
-		92: "Cow",
-		93: "Bird",
-		94: "Rabbit",
-	}
-	data := struct {
-		Name string
-		Rol string
-		Salary float32
-		MiMapa map[int]string
-	}{"John Smith","Manager",12344.56,mapa}
-	err = t.Execute(os.Stdout, data)
-	if err != nil {
-		panic(err)
-	}
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "your-password"
+	dbname   = "lenslocked_dev"
+)
+
+/*
+
+import "go.mongodb.org/mongo-driver/mongo"
+
+clientOptions := options.Client().
+    ApplyURI("mongodb+srv://<username>:<password>@sandbox.4fmcr.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+client, err := mongo.Connect(ctx, clientOptions)
+if err != nil {
+    log.Fatal(err)
 }
+
+*/

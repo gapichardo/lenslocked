@@ -18,9 +18,9 @@ type Galleries struct {
 }
 
 type GalleryForm struct {
-	Gallery   string `schema: "gallery"`
-	Tipo      string `schema: "tipo"`
-	Categoria string `schema: "categoria"`
+	Gallery   string `schema:"gallery"`
+	Tipo      string `schema:"tipo"`
+	Categoria string `schema:"categoria"`
 }
 
 // This function execute when we call th new.gohtml template with the GET method

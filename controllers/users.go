@@ -18,7 +18,7 @@ type Users struct {
 }
 
 type SignupForm struct {
-	Email    string `schema: "email"`
+	Email    string `schema:"email"`
 	Password string `schema:"password"`
 }
 
