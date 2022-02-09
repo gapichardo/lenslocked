@@ -1,6 +1,12 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 )
 
@@ -9,20 +15,50 @@ const (
 	port     = 5432
 	user     = "postgres"
 	password = "your-password"
-	dbname   = "lenslocked_dev"
+	dbname   = "lenslockedDB"
 )
 
-/*
-
-import "go.mongodb.org/mongo-driver/mongo"
-
-clientOptions := options.Client().
-    ApplyURI("mongodb+srv://<username>:<password>@sandbox.4fmcr.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-defer cancel()
-client, err := mongo.Connect(ctx, clientOptions)
-if err != nil {
-    log.Fatal(err)
+type User struct {
+	gorm.Model
+	Name  string
+	Email string `gorm:"not null;unique_index"`
 }
 
-*/
+func main() {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host,
+		port,
+		user,
+		password,
+		dbname)
+
+	db, err := gorm.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	db.LogMode(true)
+
+	db.AutoMigrate(&User{})
+
+	name, email := getInfo()
+	u := &User{
+		Name:  name,
+		Email: email,
+	}
+	if err = db.Create(u).Error; err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\n", u)
+}
+
+func getInfo() (name, email string) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("What is your name?")
+	name, _ = reader.ReadString('\n')
+	name = strings.TrimSpace(name)
+	fmt.Println("What is your email?")
+	email, _ = reader.ReadString('\n')
+	email = strings.TrimSpace(email)
+	return name, email
+}

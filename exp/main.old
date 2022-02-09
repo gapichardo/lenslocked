@@ -1,0 +1,99 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+
+	_ "github.com/lib/pq"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+)
+
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "gpichardo"
+	password = "picge02"
+	dbname   = "lenslockedDB"
+)
+
+func main() {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	// The first version w/out the ID
+	_, err = db.Exec(`INSERT INTO users(name, email) VALUES($1, $2)`,
+		"Jon Calhoun",
+		"jon@calhoun.io")
+	if err != nil {
+		panic(err)
+	}
+
+	// The second version that returns the ID
+	var id int
+	row := db.QueryRow(`INSERT INTO users(name, email) VALUES($1, $2) RETURNING id`,
+		"Jon2 Calhoun2",
+		"jon2@calhoun2.io")
+
+	err = row.Scan(&id)
+	if err != nil {
+		panic(err)
+	}
+
+	var name, email string
+	rowRet := db.QueryRow(`SELECT id, name, email FROM users WHERE id=$1`, 1)
+	err = rowRet.Scan(&id, &name, &email)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("ID:", id, "Name:", name, "Email:", email)
+
+	rowRet1 := db.QueryRow(`SELECT id, name, email FROM users WHERE id=$1`, 8)
+	err = rowRet1.Scan(&id, &name, &email)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("ID:", id, "Name:", name, "Email:", email)
+
+	var id2 int
+	for i := 1; i < 6; i++ {
+		// Create some fake data
+		userId := 1
+		if i > 3 {
+			userId = 2
+		}
+		amount := 1000 * i
+		description := fmt.Sprintf("USB-C Adapter x%d", i)
+		err = db.QueryRow(`INSERT INTO orders (user_id, amount, description) VALUES ($1, $2, $3) RETURNING id`,
+			userId,
+			amount,
+			description).Scan(&id2)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Created an order with the ID:", id2)
+	}
+	db.Close()
+}
+
+/*
+
+import "go.mongodb.org/mongo-driver/mongo"
+
+clientOptions := options.Client().
+    ApplyURI("mongodb+srv://<username>:<password>@sandbox.4fmcr.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+client, err := mongo.Connect(ctx, clientOptions)
+if err != nil {
+    log.Fatal(err)
+}
+
+*/
