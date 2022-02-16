@@ -1,35 +1,19 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 
-	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
+	"lenslocked.com/models"
 )
 
 const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "your-password"
+	password = "picge02"
 	dbname   = "lenslockedDB"
 )
-
-type User struct {
-	gorm.Model
-	Name  string
-	Email string `gorm:"not null;unique_index"`
-}
-
-type Order struct {
-	gorm.Model
-	UserID      uint
-	Amount      int
-	Description string `gorm:"not null"`
-}
 
 func main() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
@@ -39,55 +23,26 @@ func main() {
 		password,
 		dbname)
 
-	db, err := gorm.Open("postgres", psqlInfo)
+	us, err := models.NewUserService(psqlInfo)
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
-	db.LogMode(true)
+	defer us.Close()
+	us.DestructiveReset()
 
-	db.AutoMigrate(&User{}, &Order{})
-
-	name, email := getInfo()
-
-	u := &User{
-		Name:  name,
-		Email: email,
+	// Create a user
+	user := models.User{
+		Name:  "Michael Scott",
+		Email: "michael@dundermifflin.com",
 	}
-
-	if err = db.Create(u).Error; err != nil {
+	if err := us.Create(&user); err != nil {
 		panic(err)
 	}
 
-	/* 	var user User
-	   	db.First(&user)
-	   	if db.Error != nil {
-	   		panic(db.Error)
-	   	} */
-
-	createOrder(db, *u, 1023, "Fake Description #1")
-	createOrder(db, *u, 9997, "Fake Description #2")
-	createOrder(db, *u, 883454, "Fake Description #3")
-}
-
-func getInfo() (name, email string) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("What is your name?")
-	name, _ = reader.ReadString('\n')
-	name = strings.TrimSpace(name)
-	fmt.Println("What is your email?")
-	email, _ = reader.ReadString('\n')
-	email = strings.TrimSpace(email)
-	return name, email
-}
-
-func createOrder(db *gorm.DB, user User, amount int, desc string) {
-	db.Create(&Order{
-		UserID:      user.ID,
-		Amount:      amount,
-		Description: desc,
-	})
-	if db.Error != nil {
-		panic(db.Error)
+	foundUser, err := us.ByEmail("michael@dundermifflin.com")
+	if err != nil {
+		panic(err)
 	}
+	fmt.Println(foundUser)
+
 }
