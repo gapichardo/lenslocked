@@ -32,10 +32,22 @@ func main() {
 
 	// Create a user
 	user := models.User{
-		Name:  "Michael Scott",
-		Email: "michael@dundermifflin.com",
+		Name:     "Michael",
+		LastName: "Scott",
+		Email:    "michael@dundermifflin.com",
 	}
+
+	user2 := models.User{
+		Name:           "Gerardo",
+		LastName:       "Pichardo",
+		SecondLastName: "Forcade",
+		Email:          "gerardo.pichardo@dundermifflin.com",
+	}
+
 	if err := us.Create(&user); err != nil {
+		panic(err)
+	}
+	if err := us.Create(&user2); err != nil {
 		panic(err)
 	}
 
@@ -44,5 +56,21 @@ func main() {
 		panic(err)
 	}
 	fmt.Println(foundUser)
+	// Update a user
+	user.Name = "Updated Name"
+	if err := us.Update(&user); err != nil {
+		panic(err)
+	}
+	foundUser2, err2 := us.ByEmail("michael@dundermifflin.com")
+	if err2 != nil {
+		panic(err2)
+	}
+	// Because of an update, the name should now be "Updated Name"
+	fmt.Println(foundUser2)
 
+	foundUser3, err3 := us.ByLastName("Pichardo")
+	if err3 != nil {
+		panic(err3)
+	}
+	fmt.Println(foundUser3)
 }

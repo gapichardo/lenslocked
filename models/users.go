@@ -16,8 +16,8 @@ var (
 
 type User struct {
 	gorm.Model
-	Name           string `gorm: "not null"`
-	LastName       string `gorm: "not null"`
+	Name           string
+	LastName       string
 	SecondLastName string
 	Email          string `gorm:"not null;unique_index"`
 }
@@ -81,7 +81,7 @@ func (us *UserService) Delete(id uint) error {
 	user := User{Model: gorm.Model{ID: id}}
 	return us.db.Delete(&user).Error
 }
-	
+
 // first will query using the provided gorm.DB and it will  get the first item returned and place it into dst. If
 // nothing is found in the query, it will return ErrNotFound
 func first(db *gorm.DB, dst interface{}) error {
@@ -93,12 +93,34 @@ func first(db *gorm.DB, dst interface{}) error {
 }
 
 // DestructiveReset drops the user table and rebuilds it
-func (us *UserService) DestructiveReset() {
-	us.db.DropTableIfExists(&User{})
-	us.db.AutoMigrate(&User{})
+func (us *UserService) DestructiveReset() error {
+	err := us.db.DropTableIfExists(&User{}).Error
+	if err != nil {
+		return err
+	}
+	return us.AutoMigrate()
 }
 
 // Create will create the provided user and backfill data like the ID, CreatedAt, and UpdatedAt fields.
 func (us *UserService) Create(user *User) error {
 	return us.db.Create(user).Error
+}
+
+// AutoMigrate will attempt to automatically migrate the
+// users table
+func (us *UserService) AutoMigrate() error {
+	if err := us.db.AutoMigrate(&User{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (us *UserService) ByLastName(apel string) (*User, error) {
+	var user User
+	db := us.db.Where("last_name = ?",apel)
+	err := first(db, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, err
 }
